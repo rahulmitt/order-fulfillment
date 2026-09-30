@@ -4,7 +4,10 @@
 #
 # Runs as a Claude Code PreToolUse hook (.claude/settings.json) and/or as a native git
 # pre-commit hook. Install the native hook once per clone:
-#   ln -sf "$(git rev-parse --show-toplevel)/.claude/scripts/pre-commit-documentation.sh" .git/hooks/pre-commit
+#   printf '#!/bin/bash\nexec "$(git rev-parse --show-toplevel)/.claude/scripts/pre-commit-documentation.sh" "$@"\n' > .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+# Use this wrapper, not a symlink: a symlink made in WSL (absolute /mnt/c/... target) cannot
+# be followed by Git for Windows (e.g. IntelliJ), which fails with "cannot spawn .git/hooks/pre-commit".
 # With both installed, a commit documented by the Claude Code hook is skipped by the native one.
 #
 # Under Claude Code, a commit that also stages files in the same command (git add … && git
