@@ -40,6 +40,10 @@ context startup unless the schema already exists. The schema is therefore owned 
   SAME commit — a mismatch surfaces as a context-startup failure in every `@SpringBootTest`, not as a
   single failing assertion.
 
+### Enums in entities
+Persist enums with `@Enumerated(EnumType.STRING)` (never ORDINAL) and a matching `VARCHAR` column in
+`schema.sql`.
+
 ## Coding Conventions
 
 ### Money
@@ -58,6 +62,23 @@ Constructor injection only (no field @Autowired).
 Domain exceptions (exception/) for business rule violations. Map to HTTP in the controller layer only
 (a @RestControllerAdvice in controller/).
 Never swallow exceptions or leak infrastructure details.
+
+### Error responses
+Every error response body is `dto/ErrorResponse(String message)`, returned by the single
+`@RestControllerAdvice` in `controller/ApiExceptionHandler` — one `@ExceptionHandler` per domain exception.
+Domain exception messages read `"<Business reason>: <id>"`, e.g. `"Customer not found: 42"`.
+
+## Testing
+Test levels — pick the lowest one that can express the behaviour:
+
+- Acceptance (`*IT`, `src/test/java/<base package>/acceptance/`) — `@SpringBootTest` + MockMvc, full
+  stack against H2, no mocks. Seed and clean tables with `JdbcTemplate` (there is no customer/product API);
+  NEVER through repositories or services.
+- Service (`*Test`, same package) — plain JUnit 5 + Mockito, repositories mocked, no Spring context.
+  Business rules are tested here.
+- Controller (`*Test`, same package) — `@WebMvcTest` with the service mocked (`@MockitoBean`).
+  HTTP mapping only: status codes, `@Valid`, `ApiExceptionHandler` error bodies.
+- Repository (`*Test`, same package) — `@DataJpaTest`, only for custom queries.
 
 ## Architecture: classic layered (n-tier) architecture
 This is a standard Spring Boot layered architecture. The layers are:
@@ -100,9 +121,11 @@ Write test for the NEXT rule only.
 Complete Step 3 until this rule is GREEN before writing the next.
 
 Step 3: TDD (Inner Loop) — Run `/sdd-tdd`.
-RED → GREEN → REFACTOR.
-Write ONE failing test. Minimum code to pass. Refactor.
-Run ALL tests (`mvn verify`). STOP after each cycle.
+RED → GREEN → REFACTOR → OUTER CHECK.
+For the red acceptance example, write ONE failing unit test (`*Test`, next to the
+class under test). Minimum code to pass. Refactor.
+Run ALL tests (`mvn verify`), then check whether the acceptance example is green.
+STOP after each cycle. Repeat cycles until the acceptance example is green.
 
 Step 4: Review — Run `/sdd-review`.
 Verify coverage, boundaries, no AI smells.

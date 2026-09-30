@@ -1,7 +1,7 @@
 ---
 model: sonnet
 description: Run one TDD cycle (RED → GREEN → REFACTOR → CHALLENGE → STOP)
-argument-hint: "<test class or method to drive>"
+argument-hint: "<acceptance test / behaviour to drive, e.g. PlaceOrderAcceptanceIT Rule 1 example 2>"
 ---
 
 Run ONE TDD cycle for: $ARGUMENTS
@@ -9,14 +9,25 @@ Run ONE TDD cycle for: $ARGUMENTS
 Read CLAUDE.md for architecture and testing conventions before writing any code.
 
 
-## RED — confirm the failure
+## RED — write ONE failing unit test
 
-Run the failing test first. Read the failure message.
+Run the red acceptance test (`mvn -Dit.test=<Feature>AcceptanceIT verify`) and read
+the failure. Pick the next SMALLEST behaviour it needs that doesn't exist yet.
+
+Write ONE unit test (`*Test`) for that behaviour, in the same package as the class
+under test (under `src/test/java`). Choose the right level:
+- Service — plain JUnit 5 + Mockito, repositories mocked, no Spring context.
+  Business rules belong here (e.g. customer not found, customer not active).
+- Controller — `@WebMvcTest` with the service mocked. HTTP mapping only:
+  status codes, `@Valid`, `@RestControllerAdvice` error bodies.
+- Repository — `@DataJpaTest`, only when there is a custom query.
+
+Run it with `mvn -Dtest=<Class>#<method> test`. Read the failure message.
 Understand WHY it fails before writing any production code.
 If the test already passes, STOP — something is wrong.
 
 ## GREEN — minimum code to pass
-Write the MINIMUM production code to make this one test pass.
+Write the MINIMUM production code to make this one unit test pass.
 Minimum means minimum:
 - No extra methods "while we're here"
 - No anticipating the next test
@@ -51,6 +62,12 @@ Run ALL tests after refactoring with `mvn verify` — not just the current one.
 (`mvn test` skips the *IT acceptance tests.)
 If anything breaks, fix it before moving on.
 
+## OUTER CHECK — is the acceptance example green?
+Re-run the acceptance test: `mvn -Dit.test=<Feature>AcceptanceIT verify`.
+- Green → the targeted example is done.
+- Still red → name the behaviour that is still missing. It becomes the
+  next cycle's RED (a new unit test). Do NOT start it now.
+
 ## CHALLENGE — drive out edge cases
 Before stopping, ask yourself:
 "What else should this do?"
@@ -60,16 +77,18 @@ Consider: zero/empty input, not-found, boundary values, rounding, invalid state,
 duplicate requests.
 
 Propose at least one edge case to the user.
-If approved, that edge case becomes the next RED.
+If approved, that edge case becomes the next RED — as a unit test.
 
 ## STOP
 Report what you changed:
-- Which test is now passing
+- Which unit test you added, and that it is now passing
+- Acceptance test state: which examples are green / still red
 - What production code you wrote or modified
 - What you refactored
 - What edge case you propose next
 
-Do NOT write additional tests beyond the one specified.
+Do NOT write more than ONE new unit test per cycle.
+Do NOT modify the acceptance test.
 Do NOT add unrequested features or "improvements".
 Do NOT modify any existing test to make it pass — fix the production code instead.
 
