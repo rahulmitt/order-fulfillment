@@ -1,5 +1,5 @@
 ---
-model: claude-sonnet-4-6
+model: sonnet
 description: Write a failing acceptance test for the next spec rule
 argument-hint: "<rule name> @docs/specs/<feature>.md"
 ---
