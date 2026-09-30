@@ -79,6 +79,13 @@ Test levels — pick the lowest one that can express the behaviour:
 - Controller (`*Test`, same package) — `@WebMvcTest` with the service mocked (`@MockitoBean`).
   HTTP mapping only: status codes, `@Valid`, `ApiExceptionHandler` error bodies.
 - Repository (`*Test`, same package) — `@DataJpaTest`, only for custom queries.
+- DTOs have no dedicated tests — they carry no logic; their Bean Validation annotations are
+  covered by the controller tests.
+
+Assertions: JUnit 5 only — `org.junit.jupiter.api.Assertions` (`assertEquals`, `assertThrows`, `assertAll`, ...).
+NEVER AssertJ (`org.assertj.*`). MockMvc's own `andExpect(status()/jsonPath(...))` matchers are fine.
+For money, `assertEquals(new BigDecimal("1.60"), actual)` — `BigDecimal.equals` checks scale, so this
+also enforces scale 2.
 
 ## Architecture: classic layered (n-tier) architecture
 This is a standard Spring Boot layered architecture. The layers are:
@@ -121,11 +128,13 @@ Write test for the NEXT rule only.
 Complete Step 3 until this rule is GREEN before writing the next.
 
 Step 3: TDD (Inner Loop) — Run `/sdd-tdd`.
-RED → GREEN → REFACTOR → OUTER CHECK.
+RED → GREEN → REFACTOR → OUTER CHECK → CHALLENGE.
 For the red acceptance example, write ONE failing unit test (`*Test`, next to the
 class under test). Minimum code to pass. Refactor.
-Run ALL tests (`mvn verify`), then check whether the acceptance example is green.
-STOP after each cycle. Repeat cycles until the acceptance example is green.
+Run ALL tests (`mvn verify`), then check whether the acceptance test is green.
+Propose an edge case; if the user approves it, it becomes the next RED (before the
+remaining missing behaviour).
+STOP after each cycle. Repeat cycles until every example of the rule is green.
 
 Step 4: Review — Run `/sdd-review`.
 Verify coverage, boundaries, no AI smells.

@@ -10,6 +10,12 @@ Tests are executable specifications.
 Use @Nested for grouping related tests.
 Use @ParameterizedTest to model data-driven tests
 
+# Assertions
+JUnit 5 assertions only: org.junit.jupiter.api.Assertions (assertEquals,
+assertThrows, assertAll, ...). NEVER import org.assertj.*.
+MockMvc matchers (status(), jsonPath(...).value(...)) are fine in web tests.
+Money: assertEquals(new BigDecimal("1.60"), actual) — equals also checks scale 2.
+
 # Naming conventions (Maven best practice)
 Acceptance tests → *IT (run by maven-failsafe-plugin via mvn verify).
 All other tests → *Test (unit tests, run by surefire via mvn test).

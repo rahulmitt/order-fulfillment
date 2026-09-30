@@ -15,4 +15,4 @@ Explicit RoundingMode.DOWN, scale 2.
 BigDecimal.valueOf() or new BigDecimal("...") — NEVER new BigDecimal(double).
 Use records for value objects; no Lombok.
 Use sealed interfaces and pattern matching where a closed set of variants exists.
-Test with plain JUnit + AssertJ, mocking the repository.
+Test with plain JUnit 5 + Mockito (repositories mocked, no Spring context), asserting with JUnit 5 Assertions — never AssertJ.

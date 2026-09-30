@@ -1,6 +1,6 @@
 ---
 model: sonnet
-description: Run one TDD cycle (RED → GREEN → REFACTOR → CHALLENGE → STOP)
+description: Run one TDD cycle (RED → GREEN → REFACTOR → OUTER CHECK → CHALLENGE → STOP)
 argument-hint: "<acceptance test / behaviour to drive, e.g. PlaceOrderAcceptanceIT Rule 1 example 2>"
 ---
 
@@ -17,6 +17,7 @@ the failure. Pick the next SMALLEST behaviour it needs that doesn't exist yet.
 Write ONE unit test (`*Test`) for that behaviour, in the same package as the class
 under test (under `src/test/java`). Choose the right level:
 - Service — plain JUnit 5 + Mockito, repositories mocked, no Spring context.
+  Assert with JUnit 5 `Assertions` (`assertEquals`, `assertThrows`) — never AssertJ.
   Business rules belong here (e.g. customer not found, customer not active).
 - Controller — `@WebMvcTest` with the service mocked. HTTP mapping only:
   status codes, `@Valid`, `@RestControllerAdvice` error bodies.
@@ -66,7 +67,8 @@ If anything breaks, fix it before moving on.
 Re-run the acceptance test: `mvn -Dit.test=<Feature>AcceptanceIT verify`.
 - Green → the targeted example is done.
 - Still red → name the behaviour that is still missing. It becomes the
-  next cycle's RED (a new unit test). Do NOT start it now.
+  next cycle's RED (a new unit test) — unless the user approves a CHALLENGE
+  edge case, which goes first. Do NOT start it now.
 
 ## CHALLENGE — drive out edge cases
 Before stopping, ask yourself:
@@ -77,7 +79,9 @@ Consider: zero/empty input, not-found, boundary values, rounding, invalid state,
 duplicate requests.
 
 Propose at least one edge case to the user.
-If approved, that edge case becomes the next RED — as a unit test.
+If approved, that edge case becomes the next RED — as a unit test — even when
+the acceptance test is still red. The missing behaviour named in OUTER CHECK
+is picked up by the OUTER CHECK after that cycle.
 
 ## STOP
 Report what you changed:

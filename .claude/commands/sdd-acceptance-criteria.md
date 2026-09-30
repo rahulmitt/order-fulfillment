@@ -31,8 +31,9 @@ new table or column, add it to src/test/resources/schema.sql — otherwise the
 Spring context fails to start.
 
 Assert exact values from the spec examples.
-For money: .andExpect(jsonPath("$.amount").value("1.60"))
-or use isEqualByComparingTo with BigDecimal.
+For money: .andExpect(jsonPath("$.amount").value("1.60")).
+Use JUnit 5 assertions (org.junit.jupiter.api.Assertions) for anything
+MockMvc matchers don't cover — NEVER AssertJ.
 
 ## What NOT to do
 
@@ -50,9 +51,13 @@ Wire the full stack: controller → service → repository → database.
 Run the test with `mvn -Dit.test=<Feature>AcceptanceIT verify`
 (failsafe runs *IT; `-Dtest` / `mvn test` will NOT pick it up).
 Confirm it fails for the RIGHT reason:
-- Missing endpoint → 404 or compilation error (good)
-- Wrong value → not yet, the endpoint shouldn't exist
-- Test passes → something is wrong, investigate
+- Missing endpoint or behaviour → 404, wrong status, or compilation error (good)
+- Fails for another reason (context startup failure, bad seed data, wrong
+  URL or JSON path in the test) → wrong reason: investigate and fix the TEST,
+  then re-run
+- Test passes → something is wrong: investigate and fix the TEST, then re-run
+
+Never write production code to change how the test fails.
 
 Report: which rule you tested, how many examples, and
 the failure reason.

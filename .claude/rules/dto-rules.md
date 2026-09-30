@@ -12,4 +12,4 @@ Bean Validation annotations (jakarta.validation.*) ARE allowed.
 No business logic — DTOs carry data, nothing else.
 NEVER expose JPA entities from model/ as a request or response type.
 BigDecimal for ALL monetary fields, scale 2.
-Test with plain JUnit + AssertJ.
+No dedicated DTO tests — validation annotations are covered by @WebMvcTest controller tests.

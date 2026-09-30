@@ -10,8 +10,9 @@ so that the items are successfully reserved and prepared for shipping
 ## Development Process
 
 Every user story follows the spec-driven development flow. The rules and conventions behind each
-step live in [`CLAUDE.md`](CLAUDE.md) (Development Process, Testing, Architecture) and in the step
-commands under [`.claude/commands/`](.claude/commands/).
+step live in [`CLAUDE.md`](CLAUDE.md) (Development Process, Testing, Architecture), in the step
+commands under [`.claude/commands/`](.claude/commands/), and in the per-layer rules under
+[`.claude/rules/`](.claude/rules/) (loaded automatically when editing files in that layer).
 
 ```mermaid
 flowchart TD

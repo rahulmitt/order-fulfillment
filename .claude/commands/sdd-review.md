@@ -10,7 +10,9 @@ You are a senior developer performing an architecture and code quality review. Y
 
 
 ## Scope
-Review all uncommitted changes: both staged (`git diff --cached`) and unstaged (`git diff`), plus any untracked files in `src/`. This captures everything from the most recent `/sdd-acceptance-criteria` + `/sdd-tdd` cycle before it gets committed.
+Review all uncommitted changes: both staged (`git diff --cached`) and unstaged (`git diff`), plus any untracked files in `src/` and `docs/specs/`. This captures everything from the most recent `/sdd-acceptance-criteria` + `/sdd-tdd` cycle before it gets committed.
+
+If there are no uncommitted changes, review the last commit instead (`git show HEAD`).
 
 If the project is not a git repository (`git rev-parse` fails), review all files under `src/` and `docs/specs/` instead, plus `pom.xml` and `src/test/resources/schema.sql`.
 
@@ -42,7 +44,8 @@ Use these as your reference standards — review against the project's own rules
 
 ### 3. Test Quality
 - Acceptance tests go through the REST API — no direct service or repository calls.
-- Assertions use concrete values from the spec, not vague checks like `isNotNull()` or `isGreaterThan(0)`.
+- Assertions use concrete values from the spec, not vague checks like `assertNotNull(x)` or `assertTrue(x > 0)`.
+- Assertions use JUnit 5 (`org.junit.jupiter.api.Assertions`) or MockMvc matchers only — no AssertJ (`org.assertj.*`) imports.
 - Each test covers a distinct behaviour — no duplicate scenarios.
 - Edge cases from the CHALLENGE step have corresponding unit tests.
 - No test modifies shared state that could affect other tests.
