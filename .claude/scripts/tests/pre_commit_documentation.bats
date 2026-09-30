@@ -65,6 +65,31 @@ stage_change() {
  [ ! -f "$STUB_LOG" ]
 }
 
+@test "Git for Windows: the hook re-runs itself inside WSL" {
+ stage_change
+ cat > "$STUB_BIN/uname" <<'STUB'
+#!/bin/bash
+echo MINGW64_NT-10.0
+STUB
+ cat > "$STUB_BIN/cygpath" <<'STUB'
+#!/bin/bash
+echo "WIN:${!#}"
+STUB
+ cat > "$STUB_BIN/wsl.exe" <<'STUB'
+#!/bin/bash
+printf '%s\n' "$@" > "$BATS_TEST_TMPDIR/wsl-args"
+exit 7
+STUB
+ chmod +x "$STUB_BIN/uname" "$STUB_BIN/cygpath" "$STUB_BIN/wsl.exe"
+ run env GIT_INDEX_FILE=.git/index bash "$HOOK" < /dev/null
+ [ "$status" -eq 7 ]
+ [ "$(sed -n 5p "$BATS_TEST_TMPDIR/wsl-args")" = "_" ]
+ [ "$(sed -n 6p "$BATS_TEST_TMPDIR/wsl-args")" = "WIN:$HOOK" ]
+ [ "$(sed -n 7p "$BATS_TEST_TMPDIR/wsl-args")" = "WIN:.git/index" ]
+ [ ! -f "$STUB_LOG" ]
+ [ ! -d docs ]
+}
+
 @test "native hook: a git commit includes the generated doc" {
  ln -sf "$HOOK" .git/hooks/pre-commit
  stage_change

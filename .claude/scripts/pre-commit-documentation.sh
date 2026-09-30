@@ -9,6 +9,8 @@
 # Use this wrapper, not a symlink: a symlink made in WSL (absolute /mnt/c/... target) cannot
 # be followed by Git for Windows (e.g. IntelliJ), which fails with "cannot spawn .git/hooks/pre-commit".
 # With both installed, a commit documented by the Claude Code hook is skipped by the native one.
+# Under Git for Windows (IntelliJ, VS Code on Windows) the hook re-runs itself inside WSL,
+# where its dependencies are installed.
 #
 # Under Claude Code, a commit that also stages files in the same command (git add … && git
 # commit, -a/-i/-o/-p, paths) is blocked (exit 2): the hook runs before the command and
@@ -28,6 +30,21 @@
 #
 # Dependencies: claude CLI (authenticated), jq, perl, pgrep; timeout (GNU) or gtimeout recommended.
 # Tests: bats .claude/scripts/tests   (bats-core: https://github.com/bats-core/bats-core)
+
+# ── Git for Windows: run the hook inside WSL ─────────────────────────────────
+# The claude CLI, jq and pgrep are installed in WSL only. Git runs hooks from the worktree
+# root, which wsl.exe maps to /mnt/c/...; the script and index paths are passed as Windows
+# paths and converted with wslpath. bash -l puts ~/.local/bin (claude) on PATH. Stdin is
+# git's and is not forwarded. Without wsl.exe, the dependency guard below skips the docs.
+case "$(uname -s)" in
+ MINGW*|MSYS*|CYGWIN*)
+   if command -v wsl.exe >/dev/null 2>&1; then
+     export WSLENV="${WSLENV:+$WSLENV:}DOC_MAX_DIFF_BYTES:DOC_TIME_BUDGET:DOC_CALL_TIMEOUT:DOC_PARALLEL:DOC_FAST_MODEL"
+     exec wsl.exe -e bash -lc 'GIT_INDEX_FILE=$(wslpath -u "$2") exec "$(wslpath -u "$1")"' _ \
+       "$(cygpath -aw "$0")" "$(cygpath -aw "${GIT_INDEX_FILE:-.git/index}")" < /dev/null
+   fi
+   ;;
+esac
 
 HOOK_START_DIR=$PWD   # a Claude Code command's cd / git -C paths are relative to this
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
